@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class RetailDataPipeline:
-    """Worker #1: Responsible for loading data safely and preparing training sets."""
+    """Loads the raw CSV, drops the index column, and produces a train/test split with standardized features."""
     
     def __init__(self, file_path: str):
         self.file_path = file_path
@@ -25,7 +25,7 @@ class RetailDataPipeline:
         return df
 
     def split_and_scale(self, df: pd.DataFrame, target_col: str = 'return_rate'):
-        """Splits data into train/test sets and scales numerical values perfectly."""
+        """Splits data 80/20 and standardizes features (fit on train only to avoid leakage)."""
         X = df.drop(columns=[target_col])
         y = df[target_col]
         

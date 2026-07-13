@@ -2,13 +2,13 @@ import pandas as pd
 import logging
 
 class RetailFeatureEngineer:
-    """Worker #2: Responsible for building smart, industry-level business features."""
+    """Builds business-driven derived features from the raw retail signals."""
     
     def __init__(self):
         pass
 
     def construct_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        logging.info("Constructing high-level retail domain features...")
+        logging.info("Constructing derived retail features...")
         df = df.copy()
         
         # 1. Price Competitiveness Ratio

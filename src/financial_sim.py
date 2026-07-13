@@ -3,7 +3,7 @@ import numpy as np
 import logging
 
 class FinancialRiskSimulator:
-    """Worker #4: Translates machine learning metrics directly into Net Present Value (NPV)."""
+    """Translates ML model impact into a 3-year Net Present Value (NPV) estimate."""
     
     def __init__(self, capex: float = 50000.0, opex_annual: float = 15000.0, discount_rate: float = 0.10):
         self.capex = capex
@@ -26,8 +26,8 @@ class FinancialRiskSimulator:
         return npv
 
     def run_breakeven_analysis(self, total_returns_annual: int = 5000):
-        """Computes executive thresholds for operational costs."""
-        logging.info("--- Executive Financial Breakeven Analysis ---")
+        """Computes the breakeven return-reduction needed at each handling cost."""
+        logging.info("--- Breakeven Analysis ---")
         pv_factor = 2.48685  # Present value multiplier for 3 years at 10%
         
         for cost in [10, 15, 20]:
