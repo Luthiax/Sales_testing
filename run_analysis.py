@@ -56,7 +56,9 @@ def main():
     plt.figure(figsize=(10, 5))
     # Green bars suppress return rate risk, Red bars accelerate it
     colors = ['#5cb85c' if x < 0 else '#d9534f' for x in coefficients['Coefficient']]
-    sns.barplot(x='Coefficient', y='Feature', data=coefficients, palette=colors)
+    coefficients['color'] = colors
+    sns.barplot(x='Coefficient', y='Feature', data=coefficients,
+                hue='Feature', palette=dict(zip(coefficients['Feature'], colors)), legend=False)
     plt.title('Ridge Regression Coefficients (Drivers of Return Rate Risk)', fontsize=14, fontweight='bold', pad=15)
     plt.xlabel('Coefficient Value (Impact Weight)', fontsize=12)
     plt.ylabel('Features', fontsize=12)

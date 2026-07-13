@@ -1,0 +1,32 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+
+# Trained model artifacts (large binary, not for version control)
+models/*.pkl
+models/*.joblib
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Large raw data files (download from Kaggle — see README)
+*.csv
+
+# Generated plots (reproducible by running the scripts)
+# Uncomment the line below if you do NOT want to commit PNGs:
+# *.png

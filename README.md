@@ -69,7 +69,7 @@ Methodology: ridge regression with standardized features (chosen for explainabil
 ## How to run
 
 ```bash
-git clone https://github.com/leonardoflores-data/retail-return-risk.git
+git clone https://github.com/Luthiax/retail-return-risk.git
 cd retail-return-risk
 pip install -r requirements.txt
 
@@ -110,5 +110,5 @@ Retail analytics tooling typically depreciates over ~3 years — capex of $50,00
 
 I'm **Leonardo Flores**, a bilingual (English/Spanish) business analytics professional based in Lima, Peru, with a specialization in Business Analytics and AI. This project is part of my data-analytics portfolio — see my other repositories for cohort/retention analysis, A/B testing, customer segmentation, and an automation pipeline built on Peruvian public data.
 
-🔗 [LinkedIn placeholder — add link] · 📧 leonardo.[your-email]@gmail.com
+🔗 [LinkedIn](https://www.linkedin.com/in/leonardo-floresg/) · 🐙 [GitHub](https://github.com/Luthiax)
 
