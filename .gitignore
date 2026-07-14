@@ -26,6 +26,7 @@ Thumbs.db
 
 # Large raw data files (download from Kaggle — see README)
 *.csv
+!artifacts/*.csv
 
 # Generated plots (reproducible by running the scripts)
 # Uncomment the line below if you do NOT want to commit PNGs:

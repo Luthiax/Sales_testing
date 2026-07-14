@@ -1,0 +1,24 @@
+{
+  "environment": {
+    "python": "3.12.10",
+    "pandas": "3.0.3",
+    "numpy": "2.5.1",
+    "scikit-learn": "1.9.0",
+    "matplotlib": "3.11.0",
+    "seaborn": "0.13.2"
+  },
+  "metrics": {
+    "model": "Ridge",
+    "selected_alpha": 10.0,
+    "training_cv_rmse": 0.01563473219258299,
+    "holdout_r2": 0.22128081572873826,
+    "holdout_rmse": 0.015816574272866313,
+    "train_rows": 12000,
+    "test_rows": 3000,
+    "excluded_features": [
+      "customer_sentiment",
+      "value_perception"
+    ],
+    "random_state": 42
+  }
+}

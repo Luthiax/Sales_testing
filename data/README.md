@@ -1,46 +1,61 @@
-# Dataset — Retail Store Product Sales
+# Data card — Retail Store Product Sales Simulation
 
-**Source:** [Kaggle — "Retail Store Product Sales Dataset"](https://www.kaggle.com/datasets) (15,000 rows × 11 columns).
-**License:** Kaggle Community License — used here for educational / portfolio purposes only.
-**File:** `../RetailStoreProductSalesDataset.csv` (kept out of git via `.gitignore`; download from Kaggle to reproduce).
+**Source:** [Kaggle — Retail Store Product Sales Simulation Dataset](https://www.kaggle.com/datasets/mabubakrsiddiq/retail-store-product-sales-simulation-dataset)
 
----
+**Source description:** synthetic/simulated retail data
 
-## Column dictionary
+**Source license:** Apache 2.0, as listed on the dataset page
 
-| Column | Type | Range | Meaning |
-|---|---|---|---|
-| `price` | float | ~$45–$55 | Unit price of the product (USD) |
-| `discount` | float | ~5–7 | Discount applied at time of purchase |
-| `promotion_intensity` | float | ~0–5 | Strength of the promotional campaign on the product |
-| `footfall` | float | ~150–400 | Number of shoppers passing the product display |
-| `ad_spend` | float | ~$2,400–$2,700 | Local advertising spend for the product |
-| `competitor_price` | float | ~$43–$57 | Closest competitor's price for the same category |
-| `stock_level` | float | ~900–1,400 | Units in stock at time of sale |
-| `weather_index` | float | 1–10 | Daily weather favourability score (higher = nicer) |
-| `customer_sentiment` | float | ~0.4–1.6 | Pre-purchase product rating signal (higher = better) |
-| `return_rate` | float | 0–1 | **Target.** Fraction of units returned post-purchase (mean ≈ 6.3 %) |
-| `Unnamed: 0` | int | 0–14,999 | Row index — dropped during loading (kaggle artefact) |
+**Local file:** `../RetailStoreProductSalesDataset.csv` (excluded from Git)
 
----
+## Local integrity snapshot
 
-## Engineered features (built in `src/feature_engineering.py`)
+The supplied CSV contains 15,000 rows, 10 analytical columns, and one exported index column. The current local copy has no missing values and no exact duplicate rows.
 
-| Feature | Formula | Business meaning |
+| Column | Observed local range | Conservative interpretation |
+|---|---:|---|
+| `price` | 20.2126 to 79.2481 | Simulated product price |
+| `discount` | 0 to 18.7577 | Simulated discount field; unit is not established locally |
+| `promotion_intensity` | -1.0497 to 6.9667 | Simulated promotion index |
+| `footfall` | 70.1524 to 348.7952 | Simulated footfall measure |
+| `ad_spend` | 2,097.0203 to 2,764.8192 | Simulated advertising-spend field |
+| `competitor_price` | 16.6570 to 85.8046 | Simulated competitor price |
+| `stock_level` | 1,083.6779 to 1,301.0904 | Simulated stock-level measure |
+| `weather_index` | 1.8895 to 13.4517 | Simulated weather index |
+| `customer_sentiment` | -0.2207 to 1.3473 | Estimated satisfaction/sentiment field |
+| `return_rate` | 0 to 0.1860 | **Target:** simulated return-rate fraction |
+| `Unnamed: 0` | 0 to 14,999 | Exported row index; removed during loading |
+
+These are observed ranges, not promised business constraints. Negative values in `promotion_intensity` and `customer_sentiment`, plus `weather_index` values above 10, are retained because the source does not provide validated domain bounds.
+
+## Engineered fields
+
+| Feature | Formula | Intended interpretation |
 |---|---|---|
-| `price_competitiveness` | `price / competitor_price` | >1 = priced above market |
-| `real_discount_ratio` | `discount / price` | True depth of the discount |
-| `marketing_efficiency` | `footfall / ad_spend` | Shoppers reached per $ of ad spend |
-| `value_perception` | `customer_sentiment / price` | Sentiment per dollar of price |
+| `price_competitiveness` | `price / competitor_price` | Relative price position |
+| `real_discount_ratio` | `discount / price` | Discount relative to price |
+| `marketing_efficiency` | `footfall / ad_spend` | Simulated footfall per spend unit |
+| `value_perception` | `customer_sentiment / price` | Sentiment relative to price |
 
----
+Ratio features share information with their source columns. Ridge regularization reduces instability, but individual coefficient values remain sensitive to multicollinearity.
 
-## Leakage discussion (important for reviewers)
+## Feature-availability and leakage decision
 
-Every feature used for prediction is observable **before** a return decision is made:
+The source describes `customer_sentiment` as estimated customer satisfaction. It does not establish that this measure exists before purchase or before a return occurs. Treating it as a pre-purchase product rating would be an unsupported assumption.
 
-- `customer_sentiment` is interpreted as a *pre-purchase* product-rating signal (consistent with the Kaggle dataset card). If a reviewer can show it is instead a *post-return* satisfaction score, it should be dropped and the model re-run — this would be a strong sign of leakage and an honest thing to flag.
-- `return_rate` is the target and is never used as a feature.
-- The train/test split uses `random_state=42` so the split is reproducible; no shuffling happens across the split boundary.
+For that reason, the primary model excludes:
 
-This assumption is stated explicitly in the project notebook and in the main `README.md` so a reviewer can challenge it directly.
+- `customer_sentiment`;
+- `value_perception`, because it is derived from `customer_sentiment`.
+
+`return_rate` is always excluded from predictors. The exported row index is also removed.
+
+## Limits on interpretation
+
+- There are no product, store, customer, transaction, or date identifiers.
+- The dataset cannot support claims about future weeks, unseen stores, SKU targeting, customer-level decisions, or temporal drift.
+- A random holdout is the only practical split supported by the available schema, but it estimates performance only within this simulation.
+- Correlations and fitted coefficients describe statistical association; they do not identify causal levers.
+- The data cannot validate the separate assumptions used in the NPV scenario.
+
+To reproduce the project, download the CSV from the source link and keep its filename as `RetailStoreProductSalesDataset.csv` in the repository root.
