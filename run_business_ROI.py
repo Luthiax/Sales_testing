@@ -1,10 +1,10 @@
 """
 run_business_ROI.py
 --------------------
-Computes and visualises the business-value outputs of the predictive model.
+Computes and visualises exploratory figures and an illustrative business case.
 
-All figures derive from the SAME model object and dataset used in run_analysis.py —
-no numbers are hardcoded. A reviewer can rerun this script and get the same results.
+The NPV grid is a transparent sensitivity analysis based on user-supplied
+assumptions. It is not an estimate of measured or model-caused savings.
 
 Outputs
 -------
@@ -20,11 +20,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.linear_model import Ridge
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-
-from src.feature_engineering import RetailFeatureEngineer
 from src.financial_sim import FinancialRiskSimulator
 
 # ── Style ────────────────────────────────────────────────────────────────────
@@ -37,31 +32,13 @@ plt.rcParams.update({
     'ytick.labelsize': 11,
 })
 
-# ── 0. Load data and fit the same model used in run_analysis.py ──────────────
-def _load_and_fit():
-    """Returns a fitted (model, X_test_raw, y_test, mean_return_rate) tuple."""
+# ── 0. Load the synthetic dataset ────────────────────────────────────────────
+def _load_data():
+    """Load the source CSV and remove its exported row-index column."""
     df = pd.read_csv("RetailStoreProductSalesDataset.csv")
     if "Unnamed: 0" in df.columns:
         df = df.drop(columns=["Unnamed: 0"])
-
-    engineer = RetailFeatureEngineer()
-    df = engineer.construct_features(df)
-
-    X = df.drop(columns=["return_rate"])
-    y = df["return_rate"]
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-
-    scaler = StandardScaler()
-    X_train_sc = pd.DataFrame(scaler.fit_transform(X_train), columns=X_train.columns)
-    X_test_sc  = pd.DataFrame(scaler.transform(X_test),      columns=X_test.columns)
-
-    model = Ridge(alpha=2.976, random_state=42)
-    model.fit(X_train_sc, y_train)
-
-    return model, X_test, X_test_sc, y_test, df
+    return df
 
 
 # ── 1. NPV Sensitivity Matrix ─────────────────────────────────────────────────
@@ -99,19 +76,21 @@ def generate_npv_matrix(simulator: FinancialRiskSimulator, total_returns_annual:
         cmap="RdYlGn",
         center=0,
         xticklabels=["5% Reduction", "10% Reduction", "15% Reduction", "20% Reduction"],
-        yticklabels=["$5 Cost/Return", "$10 Cost/Return", "$15 Cost/Return", "$20 Cost/Return"],
-        cbar_kws={"label": "3-Year NPV ($000s)"},
+        yticklabels=["USD 5/return", "USD 10/return", "USD 15/return", "USD 20/return"],
+        cbar_kws={"label": "3-Year NPV (USD 000s)"},
         linewidths=0.5,
         ax=ax,
     )
     ax.set_title(
-        "Business ROI: 3-Year NPV Sensitivity Grid ($000s)\n"
-        f"Assumptions: {total_returns_annual:,} annual returns · $50k capex · $15k/yr opex · 10% discount rate",
+        "Illustrative 3-Year NPV Sensitivity Grid (USD 000s)\n"
+        f"Assumptions: {total_returns_annual:,} annual returns · USD 50k capex · "
+        "USD 15k/year opex · 10% discount rate",
         fontweight="bold",
         pad=12,
     )
-    ax.set_xlabel("Relative Reduction in Return Rate (Model Impact)")
+    ax.set_xlabel("Assumed Relative Reduction in Returns")
     ax.set_ylabel("Average Cost per Return (Logistics + Handling)")
+    ax.tick_params(axis="y", labelrotation=0)
 
     plt.tight_layout()
     plt.savefig("business_1_npv_roi_matrix.png", dpi=300)
@@ -146,7 +125,7 @@ def generate_decile_plot(df: pd.DataFrame):
         markersize=8,
     )
     ax.set_title(
-        "Average Return Rate by Customer Sentiment Decile\n"
+        "Synthetic Return Rate by Customer Sentiment Decile\n"
         "(Decile 1 = Lowest Sentiment, Decile 10 = Highest Sentiment)",
         fontweight="bold",
         pad=12,
@@ -178,7 +157,7 @@ def generate_risk_distribution(df: pd.DataFrame):
     ax.axvline(p95_val,  color="#e74c3c", linestyle="--", linewidth=2,
                label=f"Top 5% Risk Threshold (P95): {p95_val:.2f}%")
 
-    ax.set_title("Distribution of Product Return Rates (Actual Data)", fontweight="bold", pad=12)
+    ax.set_title("Distribution of Simulated Product Return Rates", fontweight="bold", pad=12)
     ax.set_xlabel("Return Rate (%)")
     ax.set_ylabel("Number of Transactions")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0f}%"))
@@ -192,14 +171,14 @@ def generate_risk_distribution(df: pd.DataFrame):
 
 # ── Entry Point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print("Loading data and fitting model …")
-    model, X_test_raw, X_test_sc, y_test, df_full = _load_and_fit()
+    print("Loading synthetic dataset …")
+    df_full = _load_data()
 
     # Simulator with the same financial parameters as run_analysis.py
     simulator = FinancialRiskSimulator(capex=50_000, opex_annual=15_000, discount_rate=0.10)
     TOTAL_RETURNS = 30_000   # enterprise-scale baseline
 
-    print("\nGenerating business-value visuals …")
+    print("\nGenerating exploratory and business-scenario visuals …")
     generate_npv_matrix(simulator, total_returns_annual=TOTAL_RETURNS)
     generate_decile_plot(df_full)
     generate_risk_distribution(df_full)
@@ -212,4 +191,4 @@ if __name__ == "__main__":
     )
     print(f"\n  Base-case NPV ($20/return, 10% reduction, {TOTAL_RETURNS:,} returns/yr): "
           f"${npv_base:,.0f}")
-    print("\nAll business-value outputs generated successfully.")
+    print("\nAll exploratory and scenario outputs generated successfully.")

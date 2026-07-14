@@ -1,38 +1,66 @@
-import pandas as pd
-import numpy as np
-import logging
+"""Transparent financial sensitivity calculations for the portfolio case study."""
+
 
 class FinancialRiskSimulator:
-    """Translates ML model impact into a 3-year Net Present Value (NPV) estimate."""
-    
-    def __init__(self, capex: float = 50000.0, opex_annual: float = 15000.0, discount_rate: float = 0.10):
+    """Estimate NPV for assumed reductions in annual product returns.
+
+    The class does not infer impact from model predictions. Callers must supply
+    an explicit target-reduction assumption.
+    """
+
+    def __init__(
+        self,
+        capex: float = 50_000.0,
+        opex_annual: float = 15_000.0,
+        discount_rate: float = 0.10,
+        horizon_years: int = 3,
+    ):
+        if capex < 0 or opex_annual < 0:
+            raise ValueError("Costs must be non-negative.")
+        if discount_rate <= -1:
+            raise ValueError("discount_rate must be greater than -1.")
+        if horizon_years < 1:
+            raise ValueError("horizon_years must be at least 1.")
+
         self.capex = capex
         self.opex_annual = opex_annual
         self.discount_rate = discount_rate
+        self.horizon_years = horizon_years
 
-    def simulate_3year_npv(self, return_handling_cost: float, target_reduction: float = 0.10, total_returns_annual: int = 5000) -> float:
-        """Calculates the 3-Year NPV return for a specific business operational cost structure."""
-        # Calculate gross operational savings per year
+    @property
+    def annuity_present_value_factor(self) -> float:
+        """Present-value factor for an equal annual cash flow."""
+        return sum(
+            1 / ((1 + self.discount_rate) ** year)
+            for year in range(1, self.horizon_years + 1)
+        )
+
+    def simulate_3year_npv(
+        self,
+        return_handling_cost: float,
+        target_reduction: float = 0.10,
+        total_returns_annual: int = 5_000,
+    ) -> float:
+        """Calculate NPV under explicit volume, cost, and reduction assumptions."""
+        if return_handling_cost < 0 or total_returns_annual < 0:
+            raise ValueError("Return cost and annual volume must be non-negative.")
+        if not 0 <= target_reduction <= 1:
+            raise ValueError("target_reduction must be between 0 and 1.")
+
         annual_savings = total_returns_annual * return_handling_cost * target_reduction
-        
-        # Net annual cash flow after maintaining the software model
         net_annual_cash_flow = annual_savings - self.opex_annual
-        
-        # Calculate NPV over 3 years
-        npv = -self.capex
-        for year in [1, 2, 3]:
-            npv += net_annual_cash_flow / ((1 + self.discount_rate) ** year)
-            
-        return npv
+        return -self.capex + net_annual_cash_flow * self.annuity_present_value_factor
 
-    def run_breakeven_analysis(self, total_returns_annual: int = 5000):
-        """Computes the breakeven return-reduction needed at each handling cost."""
-        logging.info("--- Breakeven Analysis ---")
-        pv_factor = 2.48685  # Present value multiplier for 3 years at 10%
-        
-        for cost in [10, 15, 20]:
-            annual_savings_needed = (self.capex / pv_factor) + self.opex_annual
-            req_reduction_pct = (annual_savings_needed / (total_returns_annual * cost)) * 100
-            
-            logging.info(f"At a ${cost} handling cost per return:")
-            logging.info(f" -> Model must reduce returns by at least {req_reduction_pct:.2f}% to break even over 3 years.")
+    def breakeven_reduction(
+        self,
+        return_handling_cost: float,
+        total_returns_annual: int = 5_000,
+    ) -> float:
+        """Return the annual reduction fraction required for NPV = 0."""
+        if return_handling_cost <= 0 or total_returns_annual <= 0:
+            raise ValueError("Return cost and annual volume must be positive.")
+
+        annual_savings_needed = (
+            self.capex / self.annuity_present_value_factor
+        ) + self.opex_annual
+        return annual_savings_needed / (total_returns_annual * return_handling_cost)
